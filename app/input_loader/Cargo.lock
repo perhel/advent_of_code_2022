@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "day01"
+name = "input_loader"
 version = "0.1.0"
