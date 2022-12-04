@@ -94,7 +94,7 @@ mod tests {
             })
             .sum();
 
-        println!("{result}");
+        assert_eq!(result, 2);
     }
 
     #[test]
@@ -116,6 +116,6 @@ mod tests {
             })
             .sum();
 
-        println!("{result}");
+        assert_eq!(result, 4);
     }
 }
