@@ -5,26 +5,3 @@ version = 3
 [[package]]
 name = "app"
 version = "0.1.0"
-dependencies = [
- "input_loader",
- "models",
- "y_2022",
-]
-
-[[package]]
-name = "input_loader"
-version = "0.1.0"
-dependencies = [
- "models",
-]
-
-[[package]]
-name = "models"
-version = "0.1.0"
-
-[[package]]
-name = "y_2022"
-version = "0.1.0"
-dependencies = [
- "models",
-]

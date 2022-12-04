@@ -3,12 +3,22 @@ name = "app"
 version = "0.1.0"
 edition = "2021"
 
-[workspace]
-members = ["input_loader", "models"]
+[[bin]]
+name = "day01"
+path = "src/day01.rs"
+
+[[bin]]
+name = "day02"
+path = "src/day02.rs"
+
+[[bin]]
+name = "day03"
+path = "src/day03.rs"
+
+[[bin]]
+name = "day04"
+path = "src/day04.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-input_loader = { path = "./input_loader" }
-y_2022 = { path = "./solutions/y_2022" }
-models = { path = "./models" }
