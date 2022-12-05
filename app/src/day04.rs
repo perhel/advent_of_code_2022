@@ -1,4 +1,5 @@
 use std::fs;
+use itertools::Itertools;
 
 struct CleanupPair {
     first: Vec<u32>,
@@ -12,17 +13,19 @@ impl From<&str> for CleanupPair {
             panic!()
         }
 
-        let mut ranges: Vec<Vec<u32>> = Vec::new();
-        for &r in &pair {
-            ranges.push(
-                r.split('-')
-                    .map(|s| s.parse::<u32>().expect("Should parse")).collect()
-            );
-        }
+        let cleanup = pair.iter()
+            .map(|&r| r.split('-')
+                .map(|s| s.parse().expect("msg"))
+                .collect::<Vec<u32>>())
+            .take(2).collect_tuple::<(Vec<u32>, Vec<u32>)>()
+            .map(|(first, second)| CleanupPair {
+                first: (first[0]..first[1]).collect(),
+                second: (second[0]..second[1]).collect() 
+            });
 
-        CleanupPair {
-            first: (ranges[0][0]..ranges[0][1] + 1).collect(),
-            second: (ranges[1][0]..ranges[1][1] + 1).collect()
+        match cleanup {
+            Some(cleanup_pair) => cleanup_pair,
+            None => panic!()
         }
     }
 }
