@@ -1,4 +1,15 @@
 use std::fs;
+use stopwatch::Stopwatch;
+
+#[cfg(debug_assertions)]
+fn get_env() -> &'static str {
+    "DEBUG"
+}
+
+#[cfg(not(debug_assertions))]
+fn get_env() -> &'static str {
+    "RELEASE"
+}
 
 #[derive(PartialEq, Clone, Copy, Debug)]
 enum Weapon {
@@ -127,11 +138,15 @@ fn part_2(input: String) -> u32 {
 }
 
 fn main() {
+    let mut sw = Stopwatch::start_new();
     let input = fs::read_to_string("inputs/2022/day02.txt").expect("Could not read file");
 
     println!("### Day 2 ###");
     println!("Part 1: {}", part_1(input.clone()));
     println!("Part 2: {}", part_2(input.clone()));
+    let ms = sw.elapsed();
+    sw.stop();
+    println!("-- {}μs total ({})--", ms.as_micros(), get_env());
 }
 
 #[cfg(test)]

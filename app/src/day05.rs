@@ -1,6 +1,17 @@
 use std::fs;
 
 use itertools::Itertools;
+use stopwatch::Stopwatch;
+
+#[cfg(debug_assertions)]
+fn get_env() -> &'static str {
+    "DEBUG"
+}
+
+#[cfg(not(debug_assertions))]
+fn get_env() -> &'static str {
+    "RELEASE"
+}
 
 #[derive(Clone)]
 struct Ship {
@@ -50,7 +61,7 @@ impl Ship {
         }
     }
 
-    fn move_crates(&mut self, mv: Move) {
+    fn move_crates(&mut self, mv: &Move) {
         let mut crane: Vec<char> = vec![];
         for _ in 0..mv.amount {
             let from =  &self.stacks.iter_mut()
@@ -69,7 +80,7 @@ impl Ship {
 
     fn get_top_crates(&self) -> String {
         self.stacks.to_owned().iter_mut()
-            .map(|s| s.1.pop().expect("msg"))
+            .map(|s| s.1.last().expect("Should be at least one element vec"))
             .join("")
     }
 }
@@ -104,7 +115,7 @@ fn part_1(mut ship: Ship, moves: &Vec<Move>) -> String {
     ship.get_top_crates()
 }
 
-fn part_2(mut ship: Ship, moves: Vec<Move>) -> String {
+fn part_2(mut ship: Ship, moves: &Vec<Move>) -> String {
     for mv in moves {
         ship.move_crates(mv);
     }
@@ -113,13 +124,17 @@ fn part_2(mut ship: Ship, moves: Vec<Move>) -> String {
 }
 
 fn main() {
+    let mut sw = Stopwatch::start_new();
     let input = fs::read_to_string("inputs/2022/day05.txt").expect("Could not read file");
     
     let (ship, moves) = extract_ship_and_moves(input.clone());
     
     println!("### Day 5 ###");
     println!("# Part 1: {}", part_1(ship.clone(), &moves));
-    println!("# Part 2: {}", part_2(ship, moves));
+    println!("# Part 2: {}", part_2(ship, &moves));
+    let ms = sw.elapsed();
+    sw.stop();
+    println!("-- {}μs total ({})--", ms.as_micros(), get_env());
 }
 
 fn extract_ship_and_moves(input: String) -> (Ship, Vec<Move>) {
@@ -174,7 +189,7 @@ move 1 from 1 to 2"#.to_string();
         let (mut ship, moves) = extract_ship_and_moves(input);
 
         for mv in moves {
-            ship.move_crates(mv);
+            ship.move_crates(&mv);
         }
 
         let res = ship.get_top_crates();
