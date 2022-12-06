@@ -33,7 +33,7 @@ fn get_position_after_n_unique(input: String, n: usize) -> u32 {
 fn main() {
     let input = fs::read_to_string("inputs/2022/day06.txt").expect("Could not read file");
     
-    println!("### Day 5 ###");
+    println!("### Day 6 ###");
     println!("# Part 1: {}", part_1(input.clone()));
     println!("# Part 2: {}", part_2(input));
 }
