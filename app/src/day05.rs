@@ -71,7 +71,6 @@ impl Ship {
         self.stacks.to_owned().iter_mut()
             .map(|s| s.1.pop().expect("msg"))
             .join("")
-        // 0.to_string()
     }
 }
 

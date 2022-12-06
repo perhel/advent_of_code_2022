@@ -111,9 +111,7 @@ impl Round {
 
 fn part_1(input: String) -> u32 {
     input.lines().into_iter()
-        .map(|s| 
-            Round::from(s.clone())
-        )
+        .map(|s| Round::from(s.clone()))
         .map(|r| r.your_score)
         .sum()
 }
@@ -131,6 +129,7 @@ fn part_2(input: String) -> u32 {
 fn main() {
     let input = fs::read_to_string("inputs/2022/day02.txt").expect("Could not read file");
 
+    println!("### Day 2 ###");
     println!("Part 1: {}", part_1(input.clone()));
     println!("Part 2: {}", part_2(input.clone()));
 }

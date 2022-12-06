@@ -16,6 +16,11 @@ fn part_1(input: String) -> Option<u32> {
 }
 
 fn part_2(input: String) -> u32 {
+    for i in 7..25 {
+        fs::File::create(format!("inputs/2022/day0{}.txt", i)).unwrap();
+        fs::File::create(format!("src/day0{}.rs", i)).unwrap();
+    }
+
     0
 }
 

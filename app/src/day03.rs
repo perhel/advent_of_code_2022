@@ -25,8 +25,8 @@ impl Backpack {
     pub fn find_duplicate(&self) -> Option<char> {
         match self.compartment_one.iter()
             .find(|c| self.compartment_two.contains(c)) {
-            Some(c) => Some(*c),
-            None => None
+                Some(c) => Some(*c),
+                None => None
         }
     }
 
@@ -37,9 +37,9 @@ impl Backpack {
         .collect();
 
         match start.iter()
-        .find(|c| group[2].raw.contains(c)) {
-        Some(c) => Some(*c),
-        None => None
+            .find(|c| group[2].raw.contains(c)) {
+                Some(c) => Some(*c),
+                None => None
         }
     }
 }
@@ -60,9 +60,7 @@ fn part_2(input: String) -> u32 {
         .into_iter().collect::<Vec<&str>>()
         .chunks(3)
         .map(|chunk| chunk.iter()
-            .map(|&str| {
-                Backpack::from_str(str.trim())
-            })
+            .map(|&str| Backpack::from_str(str.trim()))
             .collect()
         )
         .map(|g| Backpack::find_duplicate_in_group(&g).expect("No common char"))
@@ -128,9 +126,7 @@ mod tests {
             .into_iter().collect::<Vec<&str>>()
             .chunks(3)
             .map(|chunk| chunk.iter()
-                .map(|&str| {
-                    Backpack::from_str(str.trim())
-                })
+                .map(|&str| Backpack::from_str(str.trim()))
                 .collect()
             )
             .map(|g| Backpack::find_duplicate_in_group(&g).expect("No common char"))
