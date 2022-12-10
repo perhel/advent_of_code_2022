@@ -1,4 +1,5 @@
 use std::fs;
+use itertools::Itertools;
 use stopwatch::Stopwatch;
 
 #[cfg(debug_assertions)]
@@ -11,37 +12,195 @@ fn get_env() -> &'static str {
     "RELEASE"
 }
 
-fn part_1(input: String) -> u32 {
-    0
+#[derive(Debug, Clone)]
+struct CRT {
+    // pixels: Vec<Vec<Pixel>>
+    pixels: Vec<Pixel>
 }
 
-fn part_2(input: String) -> u32 {
-    0
+impl CRT {
+    fn new() -> CRT {
+        let mut crt = CRT { pixels: vec![Pixel::new(0); 240] };
+        
+        for i in 0..crt.pixels.len() {
+            crt.pixels[i].cycle_pos = (i + 1) as i32;
+        };
+
+        crt
+    }
+
+    fn process(&mut self, instructions: Vec<Instruction>) {
+        let mut cycle: i32 = 0;
+        let mut register_pos: i32 = 1;
+        let mut position = 0;
+
+        for i in 0..instructions.len() {
+            cycle += 1;
+            match instructions[i] {
+                Instruction::Noop => {
+                    if self.sprite_covers_position(register_pos, position) {
+                        self.light_pixel(cycle);
+                    }
+                    
+                    position += 1;
+                    if self.line_break(position) {
+                        position = 0;
+                    }
+                },
+                Instruction::AddX { x } => {
+                    if self.sprite_covers_position(register_pos, position) {
+                        self.light_pixel(cycle);
+                    }
+
+                    cycle += 1;
+                    position += 1;
+                    if self.line_break(position) {
+                        position = 0;
+                    }
+
+                    if self.sprite_covers_position(register_pos, position) {
+                        self.light_pixel(cycle);
+                    }
+
+                    register_pos += x;
+                    position += 1;
+                    if self.line_break(position) {
+                        position = 0;
+                    }
+                }
+            };
+        }
+    }
+
+    fn sprite_covers_position(&self, register: i32, position: i32) -> bool {
+        position == register - 1 ||
+        position == register ||
+        position == register + 1
+    }
+
+    fn line_break(&self, position: i32) -> bool {
+        position == 40 ||
+        position == 80 ||
+        position == 120 ||
+        position == 160 ||
+        position == 200
+    }
+
+    fn light_pixel(&mut self, cycle_pos: i32) {
+        self.pixels.iter_mut()
+            .find(|p| p.cycle_pos == cycle_pos).unwrap()
+            .lit = true;
+    }
+
+    fn display(&self) {
+        let line_breaks: Vec<i32> = vec![39,79,119,159,199];
+        for i in 0..self.pixels.len() as i32 {
+            print!("{}", self.pixels[i as usize].display());
+            if line_breaks.contains(&i) {
+                println!();
+            }
+        };
+        println!();
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Pixel {
+    cycle_pos: i32,
+    lit: bool
+}
+
+impl Pixel {
+    fn new(pos: i32) -> Pixel {
+        Pixel { cycle_pos: pos, lit: false }
+    }
+
+    fn display(&self) -> char {
+        if self.lit {
+            '#'
+        } else {
+            '.'
+        }
+    }
+}
+
+enum Instruction {
+    Noop,
+    AddX { x: i32 }
+}
+
+impl Instruction {
+    fn from_str(s: &str) -> Instruction {
+        let parts = s.split(char::is_whitespace).collect_vec();
+        match parts.len() {
+            2 => Instruction::AddX { x: parts[1].parse().expect("Should parse") },
+            _ => Instruction::Noop
+        }
+    }
+}
+
+fn part_1(input: String) -> i32 {
+    let instructions = input.lines().into_iter()
+        .map(|l| {
+            let parts = l.split(char::is_whitespace).collect_vec();
+            let instr = parts[0];
+            if parts.len() == 2 {
+                (instr, parts[1].parse::<i32>().unwrap())
+            } else {
+                (instr, 0)
+            }
+        }).collect::<Vec<(&str, i32)>>();
+
+    let mut cycle = 1;
+        let return_cycles: Vec<i32> = vec![20, 60, 100, 140, 180, 220];
+        let mut x = 1;
+        let mut signals: Vec<i32> = vec![];
+
+        for i in 0..instructions.len() {
+            match instructions[i].0 {
+                "noop" => {
+                    cycle += 1;
+                    if return_cycles.contains(&cycle) {
+                        signals.push(cycle * x);
+                    }
+                },
+                _ => {
+                    cycle += 1;
+                    if return_cycles.contains(&cycle) {
+                        signals.push(cycle * x);
+                    }
+                    x += instructions[i].1 as i32;
+                    cycle += 1;
+                    if return_cycles.contains(&cycle) {
+                        signals.push(cycle * x);
+                    }
+                }
+            }
+        }
+
+        signals.iter().sum()
+}
+
+fn part_2(input: String) {
+    let instructions: Vec<Instruction> = input.lines().into_iter()
+        .map(|l| Instruction::from_str(l)).collect();
+
+        let mut crt: CRT = CRT::new();
+
+        crt.process(instructions);
+
+        crt.display();
 }
 
 fn main() {
     let mut sw = Stopwatch::start_new();
-    todo!();let input = fs::read_to_string("inputs/2022/day0X.txt").expect("Could not read file");
+    let input = fs::read_to_string("inputs/2022/day10.txt").expect("Could not read file");
     
-    todo!();println!("### Day X ###");
+    println!("### Day 10 ###");
     println!("# Part 1: {}", part_1(input.clone()));
-    println!("# Part 2: {}", part_2(input));
+    println!("# Part 2:");
+    part_2(input);
     let ms = sw.elapsed();
     sw.stop();
     println!("-- {}μs total ({})--", ms.as_micros(), get_env());
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn part_1() {
-        let input = r#"1bc123"#.to_string();
-    }
-
-    #[test]
-    fn part_2() {
-        let input = r#"abc123"#.to_string();
-    }
 }
