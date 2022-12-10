@@ -29,14 +29,14 @@ impl CRT {
         crt
     }
 
-    fn process(&mut self, instructions: Vec<Instruction>) {
+    fn process(&mut self, instructions: &Vec<Instruction>) {
         let mut cycle: i32 = 0;
         let mut register_pos: i32 = 1;
         let mut position = 0;
 
-        for i in 0..instructions.len() {
+        for instruction in instructions {
             cycle += 1;
-            match instructions[i] {
+            match instruction {
                 Instruction::Noop => {
                     if self.sprite_covers_position(register_pos, position) {
                         self.light_pixel(cycle);
@@ -140,45 +140,37 @@ impl Instruction {
 }
 
 fn part_1(input: String) -> i32 {
-    let instructions = input.lines().into_iter()
-        .map(|l| {
-            let parts = l.split(char::is_whitespace).collect_vec();
-            let instr = parts[0];
-            if parts.len() == 2 {
-                (instr, parts[1].parse::<i32>().unwrap())
-            } else {
-                (instr, 0)
-            }
-        }).collect::<Vec<(&str, i32)>>();
+    let instructions: Vec<Instruction> = input.lines().into_iter()
+        .map(|l| Instruction::from_str(l)).collect();
 
     let mut cycle = 1;
-        let return_cycles: Vec<i32> = vec![20, 60, 100, 140, 180, 220];
-        let mut x = 1;
-        let mut signals: Vec<i32> = vec![];
+    let return_cycles: Vec<i32> = vec![20, 60, 100, 140, 180, 220];
+    let mut register = 1;
+    let mut signals: Vec<i32> = vec![];
 
-        for i in 0..instructions.len() {
-            match instructions[i].0 {
-                "noop" => {
-                    cycle += 1;
-                    if return_cycles.contains(&cycle) {
-                        signals.push(cycle * x);
-                    }
-                },
-                _ => {
-                    cycle += 1;
-                    if return_cycles.contains(&cycle) {
-                        signals.push(cycle * x);
-                    }
-                    x += instructions[i].1 as i32;
-                    cycle += 1;
-                    if return_cycles.contains(&cycle) {
-                        signals.push(cycle * x);
-                    }
+    for instruction in instructions {
+        match instruction {
+            Instruction::Noop => {
+                cycle += 1;
+                if return_cycles.contains(&cycle) {
+                    signals.push(cycle * register);
+                }
+            },
+            Instruction::AddX { x } => {
+                cycle += 1;
+                if return_cycles.contains(&cycle) {
+                    signals.push(cycle * register);
+                }
+                register += x;
+                cycle += 1;
+                if return_cycles.contains(&cycle) {
+                    signals.push(cycle * register);
                 }
             }
         }
+    }
 
-        signals.iter().sum()
+    signals.iter().sum()
 }
 
 fn part_2(input: String) {
@@ -187,7 +179,7 @@ fn part_2(input: String) {
 
         let mut crt: CRT = CRT::new();
 
-        crt.process(instructions);
+        crt.process(&instructions);
 
         crt.display();
 }
