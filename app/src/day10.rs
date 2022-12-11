@@ -14,7 +14,6 @@ fn get_env() -> &'static str {
 
 #[derive(Debug, Clone)]
 struct CRT {
-    // pixels: Vec<Vec<Pixel>>
     pixels: Vec<Pixel>
 }
 
