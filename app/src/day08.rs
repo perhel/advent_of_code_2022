@@ -1,4 +1,4 @@
-use std::{fs, str::CharIndices};
+use std::fs;
 use itertools::Itertools;
 use stopwatch::Stopwatch;
 
@@ -124,7 +124,7 @@ fn main() {
     println!("# Part 2: {}", part_2(map));
     let ms = sw.elapsed();
     sw.stop();
-    println!("-- {}μs total ({})--", ms.as_micros(), get_env());
+    println!("-- {}ms total ({})--", ms.as_millis(), get_env());
 }
 
 #[cfg(test)]
