@@ -1,4 +1,4 @@
-use std::{fs, collections::HashSet};
+use std::fs;
 use itertools::Itertools;
 use stopwatch::Stopwatch;
 
@@ -62,21 +62,24 @@ impl Sensor {
     }
 }
 
-fn part_1(input: String) -> usize {
+fn part_1(input: String) -> i32 {
     let sensors: Vec<Sensor> = input.lines().into_iter()
         .map(|l| Sensor::parse(l)).collect_vec();
 
-    let res = sensors.iter()
+    let sweeps_at_y = sensors.iter()
         .map(|s| s.scanned_x_range_at_y(2000000, None))
         .filter(|r| r.is_some()).map(|r| r.unwrap())
-        .fold(HashSet::new(), |mut acc, r| {
-            for x in r.0..=r.1 {
-                acc.insert(x); 
-            }
-            acc
-        });
+        .sorted_by(|a, b| a.0.cmp(&b.0)).collect_vec();
+    
+    let mut _reduced_scan = (sweeps_at_y[0].0, 0);
+    for sweep in sweeps_at_y {
+        if sweep.0 <= _reduced_scan.1 && sweep.1 <= _reduced_scan.1 {
+            continue;
+        }
+        _reduced_scan.1 = sweep.1;
+    }
 
-    res.len()
+    _reduced_scan.1 - _reduced_scan.0 + 1
 }
 
 fn part_2(input: String) -> u64 {
@@ -84,7 +87,7 @@ fn part_2(input: String) -> u64 {
         .map(|l| Sensor::parse(l)).collect_vec();
 
     let mut res = (0, 0);
-    'y: for y in 2000001..4000001 {
+    'y: for y in 0..=4000000 {
         let sweeps_at_y = sensors.iter()
             .map(|s| s.scanned_x_range_at_y(y, Some((0, 4000000))))
             .filter(|r| r.is_some()).map(|r| r.unwrap())
@@ -125,7 +128,7 @@ fn main() {
     println!("# Part 2: {}", part_2(input));
     let ms = sw.elapsed();
     sw.stop();
-    println!("-- {}μs total ({})--", ms.as_micros(), get_env());
+    println!("-- {}ms total ({})--", ms.as_millis(), get_env());
 }
 
 #[cfg(test)]
@@ -153,17 +156,22 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3"#.to_string();
         let sensors: Vec<Sensor> = input.lines().into_iter()
             .map(|l| Sensor::parse(l)).collect_vec();
 
-        let res = sensors.iter()
+        let sweeps_at_y = sensors.iter()
             .map(|s| s.scanned_x_range_at_y(10, None))
             .filter(|r| r.is_some()).map(|r| r.unwrap())
-            .fold(HashSet::new(), |mut acc, r| {
-                for x in r.0..=r.1 {
-                   acc.insert(x); 
-                }
-                acc
-            });
+            .sorted_by(|a, b| a.0.cmp(&b.0)).collect_vec();
+        
+        let mut _reduced_scan = (sweeps_at_y[0].0, 0);
+        for sweep in sweeps_at_y {
+            if sweep.0 <= _reduced_scan.1 && sweep.1 <= _reduced_scan.1 {
+                continue;
+            }
+            _reduced_scan.1 = sweep.1;
+        }
 
-        assert_eq!(res.len(), 26);
+        let result = _reduced_scan.1 - _reduced_scan.0 + 1;
+
+        assert_eq!(result, 26);
     }
 
     #[test]
