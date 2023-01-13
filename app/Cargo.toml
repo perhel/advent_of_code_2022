@@ -108,4 +108,5 @@ path = "src/day25.rs"
 
 [dependencies]
 itertools = "0.10"
+serde_json ="1.0"
 stopwatch = "0.0.7"
