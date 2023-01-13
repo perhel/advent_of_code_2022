@@ -13,10 +13,45 @@ fn get_env() -> &'static str {
     "RELEASE"
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum PacketPart {
     Int(i64),
     List(VecDeque<PacketPart>)
+}
+
+impl Ord for PacketPart {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self.clone(), other.clone()) {
+            (PacketPart::Int(n_l), PacketPart::Int(n_r)) => n_l.cmp(&n_r),
+            (PacketPart::List(mut arr_l), PacketPart::List(mut arr_r)) => {
+                while let Some(l) = arr_l.pop_front() {
+                    if let Some(r) = arr_r.pop_front() {
+                        let o = l.cmp(&r); 
+                        match o {
+                            Ordering::Equal => continue,
+                            _ => return o
+                        }
+                    } else {
+                        return Ordering::Greater;
+                    }
+                }
+
+                if arr_r.len() != 0 {
+                    return Ordering::Less;
+                }
+
+                Ordering::Equal
+            },
+            (PacketPart::List(_), PacketPart::Int(_)) => self.cmp(&PacketPart::List(vec![other.clone()].into())),
+            (PacketPart::Int(_), PacketPart::List(_)) => PacketPart::List(vec![self.clone()].into()).cmp(&other)
+        }
+    }
+}
+
+impl PartialOrd for PacketPart {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl PacketPart {
@@ -40,53 +75,6 @@ impl PacketPart {
         output
     }
 
-    fn cmp(l: PacketPart, r: PacketPart) -> Order {
-        match (l.clone(), r.clone()) {
-            (PacketPart::Int(n_l), PacketPart::Int(n_r)) => Order::new(n_l.cmp(&n_r)),
-            (PacketPart::List(mut arr_l), PacketPart::List(mut arr_r)) => {
-                while let Some(l) = arr_l.pop_front() {
-                    if let Some(r) = arr_r.pop_front() {
-                        let o = PacketPart::cmp(l, r); 
-                        match o {
-                            Order::Equal => continue,
-                            _ => return o
-                        }
-                    } else {
-                        return Order::Wrong;
-                    }
-                }
-
-                if arr_r.len() != 0 {
-                    return Order::Correct;
-                }
-
-                Order::Equal
-            },
-            (PacketPart::List(_), PacketPart::Int(_)) => PacketPart::cmp(l, PacketPart::List(vec![r].into())),
-            (PacketPart::Int(_), PacketPart::List(_)) => PacketPart::cmp(PacketPart::List(vec![l].into()), r)
-        }
-    }
-
-    fn compare_packets(left: &mut VecDeque<PacketPart>, right: &mut VecDeque<PacketPart>) -> Order {
-        while let Some(l) = left.pop_front() {
-            if let Some(r) = right.pop_front() {
-                let o = PacketPart::cmp(l, r); 
-                    match o {
-                        Order::Equal => continue,
-                        _ => return o
-                    }
-            } else {
-                return Order::Wrong;
-            }
-        }
-
-        if right.len() != 0 {
-            return Order::Correct;
-        }
-
-        Order::Equal
-    }
-
     fn is_divider_packet(&self) -> bool {
         if *self == PacketPart::List(VecDeque::from([PacketPart::List(VecDeque::from([PacketPart::Int(2)]))])) ||
             *self == PacketPart::List(VecDeque::from([PacketPart::List(VecDeque::from([PacketPart::Int(6)]))])) {
@@ -97,53 +85,20 @@ impl PacketPart {
     }
 }
 
-#[derive(Debug, PartialEq)]
-enum Order {
-    Correct,
-    Wrong,
-    Equal
-}
-
-impl Order {
-    fn new(ordering: Ordering) -> Self {
-        match ordering {
-            Ordering::Less => Order::Correct,
-            Ordering::Greater => Order::Wrong,
-            Ordering::Equal => Order::Equal
-        }
-    }
-
-    fn is_correct(&self) -> bool {
-        if *self == Order::Correct {
-            true
-        } else {
-            false
-        }
-    }
-
-    fn as_ordering(&self) -> Ordering {
-        match self {
-            Order::Correct => Ordering::Less,
-            Order::Equal => Ordering::Equal,
-            Order::Wrong => Ordering::Greater
-        }
-    }
-}
-
 fn part_1(input: String) -> u32 {
     let pairs = input.lines()
         .filter(|l| l.len() > 0)
         .chunks(2)
         .into_iter()
         .map(|c| c.into_iter()
-            .map(|l| PacketPart::from_str(l))
-            .collect_tuple::<(VecDeque<PacketPart>, VecDeque<PacketPart>)>()
+            .map(|l| PacketPart::List(PacketPart::from_str(l)))
+            .collect_tuple::<(PacketPart, PacketPart)>()
             .unwrap()
         ).collect_vec();
 
     pairs.iter().enumerate()
-        .map(|(i, (left, right))| (i + 1, PacketPart::compare_packets(&mut left.clone(), &mut right.clone())))
-        .filter(|(_, order)| order.is_correct())
+        .map(|(i, (left, right))| (i + 1, left.cmp(right)))
+        .filter(|(_, order)| order.is_lt())
         .fold(0, |mut acc, (i, _)| {
             acc += i as u32;
             acc
@@ -157,7 +112,7 @@ fn part_2(mut input: String) -> u32 {
     input.lines()
         .filter(|l| l.len() > 0)
         .map(|l| PacketPart::List(PacketPart::from_str(l)))
-        .sorted_by(|a, b| PacketPart::cmp(a.clone(), b.clone(),).as_ordering())
+        .sorted_by(|a, b| a.cmp(b))
         .into_iter().enumerate()
         .fold(1, |mut acc, (index, part)| {
             if part.is_divider_packet() {
@@ -217,14 +172,14 @@ mod tests {
             .chunks(2)
             .into_iter()
             .map(|c| c.into_iter()
-                .map(|l| PacketPart::from_str(l))
-                .collect_tuple::<(VecDeque<PacketPart>, VecDeque<PacketPart>)>()
+                .map(|l| PacketPart::List(PacketPart::from_str(l)))
+                .collect_tuple::<(PacketPart, PacketPart)>()
                 .unwrap()
             ).collect_vec();
 
         let sum = pairs.iter().enumerate()
-            .map(|(i, (left, right))| (i + 1, PacketPart::compare_packets(&mut left.clone(), &mut right.clone())))
-            .filter(|(_, order)| order.is_correct())
+            .map(|(i, (left, right))| (i + 1, left.cmp(right)))
+            .filter(|(_, order)| order.is_lt())
             .fold(0, |mut acc, (i, _)| {
                 acc += i as i32;
                 acc
@@ -261,10 +216,11 @@ mod tests {
 
         input.push_str("\n[[2]]");
         input.push_str("\n[[6]]");
+        
         let divider_packet_indice_product = input.lines()
             .filter(|l| l.len() > 0)
             .map(|l| PacketPart::List(PacketPart::from_str(l)))
-            .sorted_by(|a, b| PacketPart::cmp(a.clone(), b.clone(),).as_ordering())
+            .sorted_by(|a, b| a.cmp(b))
             .into_iter().enumerate()
             .fold(1, |mut acc, (index, part)| {
                 if part.is_divider_packet() {
