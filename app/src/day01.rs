@@ -1,4 +1,5 @@
 use std::fs;
+use itertools::Itertools;
 use stopwatch::Stopwatch;
 
 #[cfg(debug_assertions)]
@@ -11,7 +12,7 @@ fn get_env() -> &'static str {
     "RELEASE"
 }
 
-fn part_1(input: String) -> Option<u32> {
+fn part_1(input: String) -> u32 {
     let mut elves: Vec<u32> = Vec::new();
     let mut cargo: Vec<u32> = Vec::new();
 
@@ -23,11 +24,23 @@ fn part_1(input: String) -> Option<u32> {
             cargo.clear();
         }
     }
-    elves.iter().max().copied()
+    elves.into_iter().max().unwrap()
 }
 
 fn part_2(input: String) -> u32 {
-    0
+    let mut elves: Vec<u32> = Vec::new();
+    let mut cargo: Vec<u32> = Vec::new();
+
+    for line in input.lines() {
+        if line.len() != 0 {
+            cargo.push(line.parse::<u32>().expect("Should parse"));
+        } else {
+            elves.push(cargo.iter().sum());
+            cargo.clear();
+        }
+    }
+
+    elves.iter().sorted_by(|a, b| b.cmp(a)).take(3).sum()
 }
 
 fn main() {
@@ -39,5 +52,5 @@ fn main() {
     println!("# Part 2: {}", part_2(input.clone()));
     let ms = sw.elapsed();
     sw.stop();
-    println!("-- {}μs total ({})--", ms.as_micros(), get_env());
+    println!("-- {}ms total ({})--", ms.as_millis(), get_env());
 }
